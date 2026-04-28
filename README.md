@@ -105,3 +105,7 @@ npm run dev
 └── README.md
 ```
 
+## Despliegue
+Desplegado en Render:
+ - https://comparativaclimatica.onrender.com/
+
