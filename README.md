@@ -105,12 +105,3 @@ npm run dev
 └── README.md
 ```
 
----
-
-## Capturas de pantalla
-
-*(Añadir capturas tras ejecutar la aplicación)*
-
-**Pantalla principal:** cuatro tarjetas con color según temperatura (azul ártico → rojo caluroso) y gráfico de barras comparativo con la diferencia total de temperatura.
-
-**Pantalla de detalle:** previsión de 5 días, datos del país con bandera, y resumen de Wikipedia con imagen.
