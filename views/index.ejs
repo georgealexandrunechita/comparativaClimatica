@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Comparativa Climática Mundial</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <div>
+        <h1>🌍 Comparativa Climática</h1>
+        <p class="header-sub">Temperaturas en tiempo real · cuatro rincones del planeta</p>
+      </div>
+      <form action="/cache/clear" method="POST">
+        <button type="submit" class="btn-refresh">↺ Refrescar datos</button>
+      </form>
+    </div>
+  </header>
+
+  <main class="main-container">
+
+    <div class="cards-grid">
+      <% results.forEach(function(result) { %>
+        <% var loc      = result.location; %>
+        <% var weather  = result.weather; %>
+        <% var wiki     = result.wiki; %>
+        <% var fromCache = result.fromCache; %>
+        <% var cur      = weather && weather.current_weather; %>
+        <% var curInfo  = cur ? getWeatherInfo(cur.weathercode) : null; %>
+        <% var tClass   = cur ? getTempClass(cur.temperature) : 'temp-mild'; %>
+
+        <article class="location-card <%= tClass %> <%= loc.colorClass %>">
+          <div class="card-top">
+            <div class="card-title-row">
+              <span class="loc-flag"><%= loc.flag %></span>
+              <div>
+                <h2 class="loc-name"><%= loc.name %></h2>
+                <p class="loc-country"><%= loc.country || 'Territorio internacional' %></p>
+              </div>
+            </div>
+            <% if (fromCache) { %>
+              <span class="cache-pill">⚡ caché</span>
+            <% } else { %>
+              <span class="live-badge">● vivo</span>
+            <% } %>
+          </div>
+
+          <% if (wiki && wiki.thumbnail) { %>
+            <img
+              src="<%= wiki.thumbnail.source.replace(/\/\d+px-/, '/480px-') %>"
+              alt="<%= loc.name %>"
+              class="card-photo"
+            >
+          <% } %>
+
+          <% if (cur && curInfo) { %>
+            <div class="main-temp">
+              <span class="main-emoji"><%= curInfo.emoji %></span>
+              <span class="main-degrees"><%= Math.round(cur.temperature) %>°C</span>
+            </div>
+            <p class="cond-label"><%= curInfo.label %></p>
+            <p class="wind-label">💨 <%= Math.round(cur.windspeed) %> km/h</p>
+          <% } else { %>
+            <p class="no-weather">Sin datos meteorológicos</p>
+          <% } %>
+
+          <p class="card-excerpt">
+            <% if (wiki && wiki.extract) { %>
+              <%= wiki.extract.substring(0, 115) %>…
+            <% } else { %>
+              <%= loc.description %>
+            <% } %>
+          </p>
+
+          <a href="/location/<%= loc.id %>" class="btn-detail">Ver detalles →</a>
+        </article>
+      <% }); %>
+    </div>
+
+    <%
+      var validTemps = results
+        .filter(function(r){ return r.weather && r.weather.current_weather; })
+        .map(function(r){ return {
+          name: r.location.name,
+          flag: r.location.flag,
+          temp: r.weather.current_weather.temperature
+        }; })
+        .sort(function(a,b){ return b.temp - a.temp; });
+    %>
+
+    <% if (validTemps.length > 1) { %>
+      <section class="comparison-section">
+        <p class="section-label">Comparativa de temperaturas actuales</p>
+        <%
+          var minT = Math.min.apply(null, validTemps.map(function(t){ return t.temp; }));
+          var maxT = Math.max.apply(null, validTemps.map(function(t){ return t.temp; }));
+          var span = maxT - minT || 1;
+        %>
+        <div class="bar-list">
+          <% validTemps.forEach(function(t) { %>
+            <% var pct = Math.round(((t.temp - minT) / span) * 75) + 15; %>
+            <div class="bar-row">
+              <span class="bar-label"><%= t.flag %> <%= t.name %></span>
+              <div class="bar-track">
+                <div class="bar-fill <%= getTempClass(t.temp) %>" style="width:<%= pct %>%">
+                  <span class="bar-text"><%= Math.round(t.temp) %>°C</span>
+                </div>
+              </div>
+            </div>
+          <% }); %>
+        </div>
+        <p class="diff-note">
+          Diferencia total:
+          <strong><%= Math.round(maxT - minT) %>°C</strong>
+          entre <%= validTemps[0].flag %> <%= validTemps[0].name %>
+          y <%= validTemps[validTemps.length - 1].flag %> <%= validTemps[validTemps.length - 1].name %>
+        </p>
+      </section>
+    <% } %>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="api-dots">
+      <span class="api-dot">Open-Meteo</span>
+      <span class="api-dot">Wikipedia</span>
+      <span class="api-dot">REST Countries</span>
+    </div>
+    <a href="/cache/stats" target="_blank">Estadísticas de caché →</a>
+  </footer>
+
+</body>
+</html>
